@@ -4,5 +4,5 @@ import { IsString } from 'class-validator';
 export class TaskQuery {
   @ApiProperty({ required: true, type: String })
   @IsString()
-  discipline: string;
+  searchTerm: string;
 }

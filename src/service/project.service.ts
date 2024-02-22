@@ -14,7 +14,6 @@ import {
   hasSearchTerm,
   isComplete,
 } from 'src/extensionQuery/project.extension';
-import { dataSource } from 'src/data-source';
 
 @Injectable()
 export class ProjectService {
@@ -70,7 +69,7 @@ export class ProjectService {
         .orderBy('p.ProjectId', 'ASC')
         .skip(size * (number - 1))
         .take(size)
-        .where((mainQuery) => {
+        .andWhere((qb) => {
           const subQuery = this.taskRepository
             .createQueryBuilder('t')
             .where(`t.TaskDiscipline = '${discipline}'`)
@@ -94,9 +93,7 @@ export class ProjectService {
           'p.ListMember',
           'p.ListLeader',
           'p.ListManager',
-          'SUM(t.Tshour) AS UsedHours',
         ])
-        .innerJoin('tbTimeSheet', 't', 't.ProjectId = p.ProjectId')
         .where(`p.ProjectName != 'LEAVE'`)
         .skip(size * (number - 1))
         .take(size);
@@ -111,20 +108,6 @@ export class ProjectService {
       normalQuery = hasMember(normalQuery, member);
       normalQuery = hasSearchTerm(normalQuery, searchTerm);
       normalQuery = hasChooseProject(normalQuery, chooseProject);
-      normalQuery = normalQuery
-        .groupBy('p.ProjectId')
-        .addGroupBy('p.ProjectName')
-        .addGroupBy('p.StartDate')
-        .addGroupBy('p.TargetDate')
-        .addGroupBy('p.CompletedDate')
-        .addGroupBy('p.TotalHours')
-        .addGroupBy('p.Location')
-        .addGroupBy('p.Size')
-        .addGroupBy('p.Difficulty')
-        .addGroupBy('p.FloorAreas')
-        .addGroupBy('p.ListMember')
-        .addGroupBy('p.ListLeader')
-        .addGroupBy('p.ListManager');
 
       discipline ? (query = discipQuery) : (query = normalQuery);
 
@@ -159,7 +142,15 @@ export class ProjectService {
 
         const userHours = await userHoursQuery.getRawMany();
 
+        // Project used hours
+        const usedHours = await this.timesheetRepository
+          .createQueryBuilder('ts')
+          .select('SUM(ts.TSHour) AS UsedHours')
+          .where(`ts.ProjectId = '${projects[i]['ProjectId']}'`)
+          .getRawOne();
+
         //Return projects
+        projects[i]['UsedHours'] = usedHours['UsedHours'];
         projects[i]['Tasks'] = taskCount['TaskCount'];
         projects[i]['FilterMembers'] = userHours;
       }
@@ -186,6 +177,28 @@ export class ProjectService {
       return { projects: compactProject, pagination: totalProjects };
     } catch (error) {
       console.log('Error finding project');
+      throw error;
+    }
+  }
+  async getUserProjects(
+    id: number,
+  ): Promise<{ projects: TbProject[]; pagination: {} }> {
+    try {
+      const subQuery = this.taskRepository
+        .createQueryBuilder('t')
+        .select('t.ProjectId')
+        .where(`t.UserIds LIKE '%${id}%'`)
+        .andWhere('t.FinishedDate is null');
+      const query = this.projectRepository
+        .createQueryBuilder('p')
+        .select('p.ProjectName')
+        .where(`p.ProjectId in (${subQuery.getQuery()})`);
+      console.log('query', query.getSql());
+      const [projects, totalProjects] = await query.getManyAndCount();
+      const pagination = paginationFc(1, 10, totalProjects);
+      return { projects, pagination };
+    } catch (error) {
+      console.log('Error finding user project');
       throw error;
     }
   }

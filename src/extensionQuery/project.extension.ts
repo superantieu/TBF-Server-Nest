@@ -20,7 +20,9 @@ export const hasProjectId = (
   projectId: string,
 ) => {
   if (projectId) {
-    normalQuery = normalQuery.andWhere(`p.ProjectId = '${projectId}'`);
+    normalQuery = normalQuery.andWhere(`p.ProjectId = :projectId`, {
+      projectId: `${projectId}`,
+    });
   }
   return normalQuery;
 };
@@ -30,7 +32,8 @@ export const hasMember = (
 ) => {
   if (member) {
     normalQuery = normalQuery.andWhere(
-      `p.ListMember LIKE '%${member}%' OR p.ListLeader LIKE '%${member}%' OR p.ListManager LIKE '%${member}%'`,
+      `p.ListMember LIKE :member OR p.ListLeader LIKE :member  OR p.ListManager LIKE :member`,
+      { member: `%${member}%` },
     );
   }
   return normalQuery;
@@ -40,7 +43,9 @@ export const hasSearchTerm = (
   searchTerm: string,
 ) => {
   if (searchTerm) {
-    normalQuery = normalQuery.andWhere(`p.ProjectName LIKE '%${searchTerm}%'`);
+    normalQuery = normalQuery.andWhere(`p.ProjectName LIKE :searchTerm`, {
+      searchTerm: `%${searchTerm}%`,
+    });
   }
   return normalQuery;
 };
@@ -50,7 +55,11 @@ export const hasChooseProject = (
 ) => {
   if (chooseProject) {
     const q = chooseProject.join("','");
+    console.log('q', `'${q}'`);
     normalQuery = normalQuery.andWhere(`p.ProjectId in ('${q}')`);
+    // normalQuery = normalQuery.andWhere('p.ProjectId in (:projectIds)', {
+    //   projectIds: `'${q}'`,
+    // });
   }
   return normalQuery;
 };

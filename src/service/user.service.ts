@@ -82,7 +82,7 @@ export class UserService {
     }
   }
 
-  async findUserById(UserId: number): Promise<TbUser | undefined> {
+  async findUserById(UserId: number): Promise<TbUser[] | undefined> {
     try {
       const query = this.usersRepository
         .createQueryBuilder()
@@ -93,7 +93,7 @@ export class UserService {
           'TbUser.Discipline',
         ])
         .where('TbUser.UserId = :UserId', { UserId });
-      const user = await query.getOne();
+      const user = await query.getMany();
       console.log('user', query.getSql());
       return user;
     } catch (error) {

@@ -9,7 +9,28 @@ import { TaskService } from 'src/service/task.service';
 @Controller('api/task')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
-  @Get(':taskId')
+  @Get(':userId')
+  async getUserTasksByUserId(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<TaskResponse> {
+    try {
+      const data = await this.taskService.getUserTasksByUserId(userId);
+      if (!data) {
+        return { result: null, message: 'User task not found' };
+      }
+      return {
+        message: 'Get tasks successfully',
+        pagination: data.pagination,
+        result: data.tasks,
+      };
+    } catch (error) {
+      return {
+        message: 'Error finding user task',
+        result: null,
+      };
+    }
+  }
+  @Get('/specific/:taskId')
   async getTaskById(
     @Param('taskId', ParseIntPipe) taskId: number,
   ): Promise<TaskResponse> {
@@ -24,7 +45,7 @@ export class TaskController {
     }
   }
 
-  @Get()
+  @Get('/discipline/search')
   async getTaskDipcipline(
     @Query() taskQuery: TaskQuery,
   ): Promise<TaskResponse> {

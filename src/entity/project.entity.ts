@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { TbTask } from './task.entity';
+import { TbTimeSheet } from './timesheet.entity';
 
 @Entity('tbProject')
 export class TbProject {
@@ -30,4 +32,10 @@ export class TbProject {
   ListManager: string;
   @Column()
   Tasks: number;
+  @Column()
+  UsedHours: number;
+  @OneToMany(() => TbTask, (task) => task.project)
+  tasks: TbTask[];
+  @OneToMany(() => TbTimeSheet, (timesheet) => timesheet.project)
+  timeSheets: TbTimeSheet[];
 }

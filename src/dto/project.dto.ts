@@ -12,6 +12,7 @@ export class ProjectDto {
   ListMember: string;
   ListLeader: string;
   ListManager: string;
+  UsedHours: number;
   Tasks: number;
   FilterMembers: any;
 }

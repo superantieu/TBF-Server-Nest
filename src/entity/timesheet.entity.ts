@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { TbUser } from './user.entity';
+import { TbProject } from './project.entity';
 
 @Entity('tbTimeSheet')
 export class TbTimeSheet {
@@ -25,4 +26,7 @@ export class TbTimeSheet {
   @ManyToOne(() => TbUser, (user) => user.timeSheets)
   @JoinColumn({ name: 'UserId' })
   user: TbUser;
+  @ManyToOne(() => TbProject, (project) => project.timeSheets)
+  @JoinColumn({ name: 'ProjectId' })
+  project: TbProject;
 }

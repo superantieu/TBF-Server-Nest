@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ProjectQuery } from 'src/queryParameter/project.query';
@@ -44,6 +44,24 @@ export class ProjectController {
       };
     } catch (error) {
       return { result: null, message: 'Error finding project' };
+    }
+  }
+  @Get(':id')
+  async getUserProject(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ProjectResponse> {
+    try {
+      const data = await this.projectService.getUserProjects(id);
+      if (!data) {
+        return { result: null, message: 'User project not found' };
+      }
+      return {
+        message: 'Get user project successfully',
+        pagination: data.pagination,
+        result: data.projects,
+      };
+    } catch (error) {
+      return { result: null, message: 'Error finding user project' };
     }
   }
 }
